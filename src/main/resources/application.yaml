@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: pocket
+  datasource:
+    url: jdbc:postgresql://localhost:5433/pocket
+    username: pocket
+    password: pocket
+  flyway:
+    enabled: true

@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pocket-postgres
+    environment:
+      POSTGRES_DB: pocket
+      POSTGRES_USER: pocket
+      POSTGRES_PASSWORD: pocket
+    ports:
+      - "5433:5432"
+    volumes:
+      - pocket-pgdata:/var/lib/postgresql/data
+
+volumes:
+  pocket-pgdata:
