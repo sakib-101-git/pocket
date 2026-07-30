@@ -2,8 +2,8 @@ spring:
   application:
     name: pocket
   datasource:
-    url: jdbc:postgresql://localhost:5433/pocket
-    username: pocket
-    password: pocket
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/pocket}
+    username: ${DATABASE_USERNAME:pocket}
+    password: ${DATABASE_PASSWORD:pocket}
   flyway:
     enabled: true
