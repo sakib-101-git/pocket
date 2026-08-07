@@ -35,30 +35,18 @@ class AuthFlowTest {
 
     @Test
     void fullAuthFlow_registerLoginAccessProtectedEndpoint() throws Exception {
-        mockMvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"flow@example.com\",\"password\":\"testpass123\"}"))
-            .andExpect(status().isCreated());
+        mockMvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"flow@example.com\",\"password\":\"testpass123\"}")).andExpect(status().isCreated());
 
-        String loginResponse = mockMvc.perform(post("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"flow@example.com\",\"password\":\"testpass123\"}"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+        String loginResponse = mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"flow@example.com\",\"password\":\"testpass123\"}")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
         Map<String, String> responseMap = objectMapper.readValue(loginResponse, Map.class);
         String token = responseMap.get("token");
 
-        mockMvc.perform(get("/me")
-                .header("Authorization", "Bearer " + token))
-            .andExpect(status().isOk());
+        mockMvc.perform(get("/me").header("Authorization", "Bearer " + token)).andExpect(status().isOk());
     }
 
     @Test
     void protectedEndpoint_rejectsRequestWithNoToken() throws Exception {
-        mockMvc.perform(get("/me"))
-            .andExpect(status().isForbidden());
+        mockMvc.perform(get("/me")).andExpect(status().isForbidden());
     }
 }
