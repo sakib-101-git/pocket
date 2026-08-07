@@ -1,24 +1,24 @@
 package com.pocket.pocket;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import tools.jackson.databind.json.JsonMapper;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,10 +48,10 @@ class AccountControllerTest {
         String response = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"password\":\"testpass123\"}"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         Map<String, String> map = jsonMapper.readValue(response, Map.class);
         return map.get("token");
@@ -82,7 +82,42 @@ class AccountControllerTest {
 
         mockMvc.perform(get("/accounts")
                 .header("Authorization", "Bearer " + tokenB))
-            .andExpect(status().isOk())
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$").isEmpty());
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void createsAccountWithValidInput() throws Exception {
+        User user = new User();
+        user.setEmail("create-account@example.com");
+        user.setPasswordHash(passwordEncoder.encode("testpass123"));
+        user.setCreatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        String token = loginAndGetToken("create-account@example.com");
+
+        mockMvc.perform(post("/accounts")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"My Savings\",\"accountType\":\"savings\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.name").value("My Savings"));
+    }
+
+    @Test
+    void rejectsInvalidAccountType() throws Exception {
+        User user = new User();
+        user.setEmail("bad-account@example.com");
+        user.setPasswordHash(passwordEncoder.encode("testpass123"));
+        user.setCreatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        String token = loginAndGetToken("bad-account@example.com");
+
+        mockMvc.perform(post("/accounts")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Test\",\"accountType\":\"banana\"}"))
+                .andExpect(status().isBadRequest());
     }
 }
