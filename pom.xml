@@ -137,6 +137,11 @@
     		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     		<version>3.1.0</version>
  		</dependency>
+		<dependency>
+    		<groupId>com.plaid</groupId>
+    		<artifactId>plaid-java</artifactId>
+    		<version>40.2.0</version>
+		</dependency>
 
 	</dependencies>
 

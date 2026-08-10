@@ -15,6 +15,6 @@ public class OpenApiConfig {
             .info(new Info()
                 .title("Pocket API")
                 .version("1.0")
-                .description("Personal finance backend — accounts, transactions, categorization."));
+                .description("Personal finance backend"));
     }
 }

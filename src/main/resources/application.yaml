@@ -11,3 +11,11 @@ spring:
 jwt:
   secret: ${JWT_SECRET:please-dont-hack-my-broke-student-wallet-app}
   expiration-ms: 900000
+
+plaid:
+  client-id: ${PLAID_CLIENT_ID:}
+  secret: ${PLAID_SECRET:}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
