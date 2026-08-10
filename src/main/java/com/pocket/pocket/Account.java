@@ -31,6 +31,12 @@ public class Account {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "plaid_access_token")
+    private String plaidAccessToken;
+
+    @Column(name = "plaid_item_id")
+    private String plaidItemId;
+
     public Long getId() {
         return id;
     }
@@ -69,5 +75,21 @@ public class Account {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPlaidAccessToken() {
+        return plaidAccessToken;
+    }
+
+    public void setPlaidAccessToken(String plaidAccessToken) {
+        this.plaidAccessToken = plaidAccessToken;
+    }
+
+    public String getPlaidItemId() {
+        return plaidItemId;
+    }
+
+    public void setPlaidItemId(String plaidItemId) {
+        this.plaidItemId = plaidItemId;
     }
 }
