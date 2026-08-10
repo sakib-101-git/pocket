@@ -1,0 +1,1 @@
+ALTER TABLE transactions ADD COLUMN plaid_transaction_id VARCHAR(255) UNIQUE;

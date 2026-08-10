@@ -38,6 +38,9 @@ public class Transaction {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "plaid_transaction_id")
+    private String plaidTransactionId;
+
     public Long getId() {
         return id;
     }
@@ -92,5 +95,13 @@ public class Transaction {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPlaidTransactionId(){
+        return plaidTransactionId;
+    }
+
+    public void setPlaidTransactionId(String plaidTransactionId){
+        this.plaidTransactionId = plaidTransactionId;
     }
 }
