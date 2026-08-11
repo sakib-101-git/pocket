@@ -1,26 +1,19 @@
 package com.pocket.pocket;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plaid.client.model.TransactionsSyncRequest;
-import com.plaid.client.model.TransactionsSyncResponse;
-import com.plaid.client.request.PlaidApi;
-
 import jakarta.validation.Valid;
-import retrofit2.Response;
 
 @RestController
 public class AccountController {
@@ -28,17 +21,14 @@ public class AccountController {
     private final AccountService accountService;
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
-    private final PlaidApi plaidApi;
+    private final RabbitTemplate rabbitTemplate;
 
     public AccountController(AccountService accountService, UserRepository userRepository,
-                              AccountRepository accountRepository, TransactionRepository transactionRepository,
-                              PlaidApi plaidApi) {
+                              AccountRepository accountRepository, RabbitTemplate rabbitTemplate) {
         this.accountService = accountService;
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
-        this.plaidApi = plaidApi;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @GetMapping("/accounts")
@@ -55,8 +45,7 @@ public class AccountController {
     }
 
     @PostMapping("/accounts/{id}/sync")
-    @Transactional
-    public Map<String, Object> syncTransactions(@PathVariable Long id) throws Exception {
+    public ResponseEntity<Map<String, String>> syncTransactions(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow();
 
@@ -67,29 +56,8 @@ public class AccountController {
             throw new ResourceNotFoundException("Account not found");
         }
 
-        TransactionsSyncRequest request = new TransactionsSyncRequest()
-                .accessToken(account.getPlaidAccessToken());
+        rabbitTemplate.convertAndSend(RabbitConfig.SYNC_QUEUE, new SyncJobMessage(account.getId()));
 
-        Response<TransactionsSyncResponse> response = plaidApi.transactionsSync(request).execute();
-
-        if (!response.isSuccessful()) {
-            String errorMessage = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-            throw new RuntimeException("Plaid sync failed: " + errorMessage);
-        }
-
-        List<com.plaid.client.model.Transaction> added = response.body().getAdded();
-
-        for (com.plaid.client.model.Transaction t : added) {
-            transactionRepository.upsertTransaction(
-                    account.getId(),
-                    t.getAmount() != null ? BigDecimal.valueOf(t.getAmount()) : BigDecimal.ZERO,
-                    t.getName(),
-                    t.getDate() != null ? t.getDate().atStartOfDay() : LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    t.getTransactionId()
-            );
-        }
-
-        return Map.of("syncedCount", added.size());
+        return ResponseEntity.accepted().body(Map.of("status", "sync queued"));
     }
 }
