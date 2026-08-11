@@ -56,8 +56,29 @@ public class AccountController {
             throw new ResourceNotFoundException("Account not found");
         }
 
+        account.setSyncStatus("PENDING");
+        accountRepository.save(account);
+
         rabbitTemplate.convertAndSend(RabbitConfig.SYNC_QUEUE, new SyncJobMessage(account.getId()));
 
         return ResponseEntity.accepted().body(Map.of("status", "sync queued"));
+    }
+
+    @GetMapping("/accounts/{id}/sync/status")
+    public Map<String, Object> getSyncStatus(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("Account not found");
+        }
+
+        return Map.of(
+                "status", account.getSyncStatus() != null ? account.getSyncStatus() : "NEVER_SYNCED",
+                "lastSyncedAt", account.getLastSyncedAt() != null ? account.getLastSyncedAt().toString() : ""
+        );
     }
 }

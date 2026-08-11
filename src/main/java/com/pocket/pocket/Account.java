@@ -37,6 +37,12 @@ public class Account {
     @Column(name = "plaid_item_id")
     private String plaidItemId;
 
+    @Column(name = "sync_status")
+    private String syncStatus;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
+
     public Long getId() {
         return id;
     }
@@ -91,5 +97,21 @@ public class Account {
 
     public void setPlaidItemId(String plaidItemId) {
         this.plaidItemId = plaidItemId;
+    }
+
+    public String getSyncStatus() {
+        return syncStatus;
+    }
+
+    public void setSyncStatus(String syncStatus) {
+        this.syncStatus = syncStatus;
+    }
+
+    public LocalDateTime getLastSyncedAt() {
+        return lastSyncedAt;
+    }
+
+    public void setLastSyncedAt(LocalDateTime lastSyncedAt) {
+        this.lastSyncedAt = lastSyncedAt;
     }
 }

@@ -31,10 +31,10 @@ public class SyncWorker {
     @Transactional
     public void handleSyncJob(SyncJobMessage message) throws Exception {
         Account account = accountRepository.findById(message.getAccountId())
-            .orElseThrow(() -> new RuntimeException("Account not found: " + message.getAccountId()));
+                .orElseThrow(() -> new RuntimeException("Account not found: " + message.getAccountId()));
 
         TransactionsSyncRequest request = new TransactionsSyncRequest()
-            .accessToken(account.getPlaidAccessToken());
+                .accessToken(account.getPlaidAccessToken());
 
         Response<TransactionsSyncResponse> response = plaidApi.transactionsSync(request).execute();
 
@@ -50,14 +50,19 @@ public class SyncWorker {
     public void applyTransactions(Account account, List<com.plaid.client.model.Transaction> added) {
         for (com.plaid.client.model.Transaction t : added) {
             transactionRepository.upsertTransaction(
-                account.getId(),
-                t.getAmount() != null ? BigDecimal.valueOf(t.getAmount()) : BigDecimal.ZERO,
-                t.getName(),
-                t.getDate() != null ? t.getDate().atStartOfDay() : LocalDateTime.now(),
-                LocalDateTime.now(),
-                t.getTransactionId()
+                    account.getId(),
+                    t.getAmount() != null ? BigDecimal.valueOf(t.getAmount()) : BigDecimal.ZERO,
+                    t.getName(),
+                    t.getDate() != null ? t.getDate().atStartOfDay() : LocalDateTime.now(),
+                    LocalDateTime.now(),
+                    t.getTransactionId()
             );
         }
+
+        account.setSyncStatus("COMPLETED");
+        account.setLastSyncedAt(LocalDateTime.now());
+        accountRepository.save(account);
+
         System.out.println("Synced " + added.size() + " transactions for account " + account.getId());
     }
 }

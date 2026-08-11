@@ -1,0 +1,2 @@
+ALTER TABLE accounts ADD COLUMN sync_status VARCHAR(50) DEFAULT 'NEVER_SYNCED';
+ALTER TABLE accounts ADD COLUMN last_synced_at TIMESTAMP;
