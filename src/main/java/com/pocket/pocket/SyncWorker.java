@@ -43,8 +43,11 @@ public class SyncWorker {
             throw new RuntimeException("Plaid sync failed: " + errorMessage);
         }
 
-        List<com.plaid.client.model.Transaction> added = response.body().getAdded();
+        applyTransactions(account, response.body().getAdded());
+    }
 
+    @Transactional
+    public void applyTransactions(Account account, List<com.plaid.client.model.Transaction> added) {
         for (com.plaid.client.model.Transaction t : added) {
             transactionRepository.upsertTransaction(
                 account.getId(),
@@ -55,7 +58,6 @@ public class SyncWorker {
                 t.getTransactionId()
             );
         }
-
         System.out.println("Synced " + added.size() + " transactions for account " + account.getId());
     }
 }
