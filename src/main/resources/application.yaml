@@ -12,6 +12,14 @@ spring:
     port: 5672
     username: guest
     password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000
+          multiplier: 2.0
+          max-retries: 4
+          max-interval: 20000
 
 jwt:
   secret: ${JWT_SECRET:please-dont-hack-my-broke-student-wallet-app}
